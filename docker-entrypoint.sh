@@ -3,5 +3,5 @@
 if [ "$1" = "bash" ];then
     exec /bin/bash
 else
-    exec nginx $@
+    exec nginx "$@"
 fi
