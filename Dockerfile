@@ -1,4 +1,4 @@
-FROM centos:7
+FROM centos:7.4.1708
 
 RUN yum makecache fast && \
     yum install -y epel-release && \
@@ -26,18 +26,13 @@ RUN wget http://nginx.org/download/nginx-1.14.0.tar.gz && \
     cp /opt/naxsi-0.55.3/naxsi_config/naxsi_core.rules /etc/nginx/ && \
     cd .. && rm -rf /opt/*
 
-RUN mkdir -p /usr/local/nginx/body
-
-COPY nginx.conf /etc/nginx/nginx.conf
-
-WORKDIR /etc/nginx
+RUN mkdir -p /usr/local/nginx/body && \
+    mkdir -p /var/www/html && \
+    echo "# Waiting..." > /var/www/html/index.html
 
 EXPOSE 80
+WORKDIR /etc/nginx
+COPY nginx.conf nginx.conf.template /etc/nginx/
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-
-RUN chmod +x /docker-entrypoint.sh
-
-ENTRYPOINT [ "/docker-entrypoint.sh" ]
-
-CMD [ "-g", "daemon off;" ]
+COPY bootstrap.sh confd /usr/local/bin/
+CMD bootstrap.sh

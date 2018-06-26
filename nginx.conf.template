@@ -1,0 +1,65 @@
+worker_processes  10;
+error_log /dev/stderr info;
+
+events {
+    multi_accept on;
+    use epoll;
+    worker_connections 1024;
+}
+
+http {
+    include mime.types;
+    include naxsi_core.rules;
+    default_type application/octet-stream;
+    types_hash_max_size 2048;
+
+    gzip on;
+    gzip_disable "msie6";
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_buffers 16 8k;
+    gzip_http_version 1.1;
+    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+
+    client_max_body_size 128M;
+    server_names_hash_bucket_size 512;
+    sendfile on;
+    tcp_nopush on;
+    keepalive_timeout 65;
+
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for"';
+    access_log /dev/stdout main;
+
+    server {
+        listen __listen_port__;
+        root /var/www/html;
+        index index.html;
+
+        location / {        
+            SecRulesEnabled; 
+            #LearningMode;
+            DeniedUrl /RequestDenied;
+            CheckRule "$SQL >= 8" BLOCK;
+            CheckRule "$RFI >= 8" BLOCK;
+            CheckRule "$TRAVERSAL >= 4" BLOCK;
+            CheckRule "$EVADE >= 4" BLOCK;
+            CheckRule "$XSS >= 8" BLOCK;
+            
+            proxy_pass __backend__
+        }
+
+        location /RequestDenied {
+            return 403;
+        }    
+    }
+
+    include /etc/nginx/conf/http/*;
+}
+
+stream {
+    log_format  main  '$remote_addr [$time_local] "$protocol" $status "$upstream_addr" $upstream_connect_time"';
+    access_log  /dev/stdout  main;
+
+    include /etc/nginx/conf/stream/*;
+}
