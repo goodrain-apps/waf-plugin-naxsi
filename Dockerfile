@@ -30,7 +30,6 @@ RUN mkdir -p /usr/local/nginx/body && \
     mkdir -p /var/www/html && \
     echo "# Waiting..." > /var/www/html/index.html
 
-EXPOSE 80
 WORKDIR /etc/nginx
 COPY nginx.conf nginx.conf.template /etc/nginx/
 
